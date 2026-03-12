@@ -16,5 +16,6 @@ public interface LeaveRepository {
 
     boolean updateLeaveStatus(Long leaveRecordId, String status) throws Exception;
 
-     List<LeaveRecord> findByIcNumber(String icNumber) throws Exception;
+//     List<LeaveRecord> findByIcNumber(String icNumber) throws Exception;
+    List<LeaveRecord> findByUserId(Long userId) throws Exception;
 }

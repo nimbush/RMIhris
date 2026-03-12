@@ -1,10 +1,6 @@
 package com.techspire.project.remote;
 
-import com.techspire.project.dto.CreateUserDto;
-import com.techspire.project.dto.LeaveApplyDto;
-import com.techspire.project.dto.LoginResponseDto;
-import com.techspire.project.dto.UpdateUserDto;
-import com.techspire.project.dto.UserReportDto;
+import com.techspire.project.dto.*;
 import com.techspire.project.model.LeaveRecord;
 import com.techspire.project.model.User;
 import com.techspire.project.service.AuthService;
@@ -84,7 +80,7 @@ public class JdbcRemoteImpl extends UnicastRemoteObject implements Jdbc {
     public List<LeaveRecord> checkStatusByIcNumber(String icNumber) throws RemoteException {
 
         try {
-            return leaveService.getLeaveStatusByIcNumber(icNumber);
+            return leaveService.checkStatusByIcNumber(icNumber);
         } catch (Exception e) {
             throw new RemoteException("Failed to fetch leave records", e);
         }
@@ -112,5 +108,10 @@ public class JdbcRemoteImpl extends UnicastRemoteObject implements Jdbc {
     @Override
     public boolean addLeaveCount(String icNumber, int extraLeave) throws Exception {
         return userService.addLeaveCount(icNumber, extraLeave);
+    }
+
+    @Override
+    public UserDetailedReportDto generateUserReport(String icNumber) throws Exception {
+        return reportService.generateUserReport(icNumber);
     }
 }

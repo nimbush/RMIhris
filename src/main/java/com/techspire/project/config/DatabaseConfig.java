@@ -59,14 +59,16 @@ public class DatabaseConfig {
             );
 
             statement.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS leave_records (" +
-                            "id BIGINT PRIMARY KEY AUTO_INCREMENT, " +
-                            "userId BIGINT NOT NULL, " +
-                            "leaveDays INT NOT NULL, " +
-                            "status VARCHAR(30) NOT NULL, " +
-                            "appliedDate DATE NOT NULL, " +
-                            "FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE" +
-                            ")"
+                    "CREATE TABLE IF NOT EXISTS leave_records (\n" +
+                            "    id BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    user_id BIGINT NOT NULL,\n" +
+                            "    leave_days INT NOT NULL,\n" +
+                            "    status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',\n" +
+                            "    applied_date DATE NOT NULL,\n" +
+                            "    from_date DATE NOT NULL,\n" +
+                            "    to_date DATE NOT NULL,\n" +
+                            "    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n" +
+                            ");"
             );
         }
 
@@ -90,21 +92,21 @@ public class DatabaseConfig {
                 }
             }
 
-            if (userId == null) {
-                try (PreparedStatement ps = connection.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
-                    ps.setString(1, "HR");
-                    ps.setString(2, "USER");
-                    ps.setString(3, "HR123");
-                    ps.setString(4, "HR");
-                    ps.setInt(5, 30);
-                    ps.executeUpdate();
-
-                    try (ResultSet keys = ps.getGeneratedKeys()) {
-                        if (keys.next()) {
-                            userId = keys.getLong(1);
-                        }
-                    }
-                }
+//            if (userId == null) {
+//                try (PreparedStatement ps = connection.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
+//                    ps.setString(1, "HR");
+//                    ps.setString(2, "USER");
+//                    ps.setString(3, "HR123");
+//                    ps.setString(4, "HR");
+//                    ps.setInt(5, 30);
+//                    ps.executeUpdate();
+//
+//                    try (ResultSet keys = ps.getGeneratedKeys()) {
+//                        if (keys.next()) {
+//                            userId = keys.getLong(1);
+//                        }
+//                    }
+//                }
 
                 if (userId != null) {
                     try (PreparedStatement ps = connection.prepareStatement(insertCredentialSql)) {
@@ -117,5 +119,5 @@ public class DatabaseConfig {
                 }
             }
         }
-    }
+//    }
 }

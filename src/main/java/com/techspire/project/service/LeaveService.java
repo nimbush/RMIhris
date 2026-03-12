@@ -15,5 +15,5 @@ public interface LeaveService {
 
     List<LeaveRecord> checkStatus() throws Exception;
 
-    List<LeaveRecord> getLeaveStatusByIcNumber(String icNumber) throws Exception;
+    public List<LeaveRecord> checkStatusByIcNumber(String icNumber) throws Exception;
 }

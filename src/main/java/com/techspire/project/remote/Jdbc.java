@@ -1,10 +1,6 @@
 package com.techspire.project.remote;
 
-import com.techspire.project.dto.CreateUserDto;
-import com.techspire.project.dto.LeaveApplyDto;
-import com.techspire.project.dto.LoginResponseDto;
-import com.techspire.project.dto.UpdateUserDto;
-import com.techspire.project.dto.UserReportDto;
+import com.techspire.project.dto.*;
 import com.techspire.project.model.LeaveRecord;
 import com.techspire.project.model.User;
 
@@ -39,5 +35,8 @@ public interface Jdbc extends Remote {
     List<UserReportDto> yearlyReport() throws RemoteException, Exception;
 
     User getUserByIcNumber(String icNumber) throws RemoteException;
+
     boolean addLeaveCount(String icNumber, int extraLeave) throws Exception;
+
+    UserDetailedReportDto generateUserReport(String icNumber) throws RemoteException, Exception;
 }

@@ -1,18 +1,17 @@
 package com.techspire.project.model;
 
-import com.techspire.project.model.enums.LeaveStatus;
-
 import java.io.Serializable;
 import java.time.LocalDate;
 
 public class LeaveRecord implements Serializable {
-    private static final long serialVersionUID = 1L;
 
     private Long id;
     private Long userId;
     private int leaveDays;
-    private LeaveStatus status;
+    private String status;
     private LocalDate appliedDate;
+    private LocalDate fromDate;
+    private LocalDate toDate;
 
     public LeaveRecord() {
     }
@@ -41,11 +40,11 @@ public class LeaveRecord implements Serializable {
         this.leaveDays = leaveDays;
     }
 
-    public LeaveStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(LeaveStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
@@ -55,5 +54,21 @@ public class LeaveRecord implements Serializable {
 
     public void setAppliedDate(LocalDate appliedDate) {
         this.appliedDate = appliedDate;
+    }
+
+    public LocalDate getFromDate() {
+        return fromDate;
+    }
+
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public LocalDate getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate = toDate;
     }
 }

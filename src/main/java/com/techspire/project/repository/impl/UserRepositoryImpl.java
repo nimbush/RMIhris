@@ -2,6 +2,7 @@ package com.techspire.project.repository.impl;
 
 import com.techspire.project.config.DatabaseConfig;
 import com.techspire.project.dto.UpdateUserDto;
+import com.techspire.project.dto.UserDetailedReportDto;
 import com.techspire.project.dto.UserReportDto;
 import com.techspire.project.model.User;
 import com.techspire.project.model.enums.UserType;
@@ -136,9 +137,9 @@ public class UserRepositoryImpl implements UserRepository {
     public List<UserReportDto> getYearlyReport() throws Exception {
         String sql =
                 "SELECT u.id, u.firstName, u.lastName, u.userType, u.leaveCount, " +
-                        "COALESCE(SUM(CASE WHEN lr.status = 'APPROVED' THEN lr.leaveDays ELSE 0 END), 0) AS approvedLeaveTaken " +
+                        "COALESCE(SUM(CASE WHEN lr.status = 'APPROVED' THEN lr.leave_days ELSE 0 END), 0) AS approvedLeaveTaken " +
                         "FROM users u " +
-                        "LEFT JOIN leave_records lr ON u.id = lr.userId " +
+                        "LEFT JOIN leave_records lr ON u.id = lr.user_id " +
                         "GROUP BY u.id, u.firstName, u.lastName, u.userType, u.leaveCount";
 
         List<UserReportDto> reports = new ArrayList<>();
@@ -163,6 +164,73 @@ public class UserRepositoryImpl implements UserRepository {
         }
 
         return reports;
+    }
+
+    @Override
+    public UserDetailedReportDto getDetailedReportByIcNumber(String icNumber) throws Exception {
+        String userSql =
+                "SELECT u.id, u.firstName, u.lastName, u.icNumber, u.userType, u.leaveCount, " +
+                        "COALESCE(SUM(CASE WHEN lr.status = 'APPROVED' THEN lr.leave_days ELSE 0 END), 0) AS approvedLeaveTaken, " +
+                        "COUNT(lr.id) AS totalApplications " +
+                        "FROM users u " +
+                        "LEFT JOIN leave_records lr ON u.id = lr.user_id " +
+                        "WHERE u.icNumber = ? " +
+                        "GROUP BY u.id, u.firstName, u.lastName, u.icNumber, u.userType, u.leaveCount";
+
+        String historySql =
+                "SELECT from_date, to_date, leave_days, status, applied_date " +
+                        "FROM leave_records " +
+                        "WHERE user_id = ? " +
+                        "ORDER BY applied_date DESC";
+
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement userPs = connection.prepareStatement(userSql)) {
+
+            userPs.setString(1, icNumber);
+
+            try (ResultSet rs = userPs.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+
+                int remainingLeave = rs.getInt("leaveCount");
+                int approvedLeaveTaken = rs.getInt("approvedLeaveTaken");
+
+                UserDetailedReportDto dto = new UserDetailedReportDto();
+                dto.setUserId(rs.getLong("id"));
+                dto.setFullName(rs.getString("firstName") + " " + rs.getString("lastName"));
+                dto.setIcNumber(rs.getString("icNumber"));
+                dto.setUserType(rs.getString("userType"));
+                dto.setRemainingLeave(remainingLeave);
+                dto.setTotalLeave(remainingLeave + approvedLeaveTaken);
+                dto.setTotalApplications(rs.getInt("totalApplications"));
+
+                try (PreparedStatement historyPs = connection.prepareStatement(historySql)) {
+                    historyPs.setLong(1, dto.getUserId());
+
+                    try (ResultSet hrs = historyPs.executeQuery()) {
+                        java.util.List<UserDetailedReportDto.LeaveHistoryItemDto> history = new java.util.ArrayList<>();
+
+                        while (hrs.next()) {
+                            UserDetailedReportDto.LeaveHistoryItemDto item =
+                                    new UserDetailedReportDto.LeaveHistoryItemDto();
+
+                            item.setFromDate(hrs.getDate("from_date").toLocalDate());
+                            item.setToDate(hrs.getDate("to_date").toLocalDate());
+                            item.setLeaveDays(hrs.getInt("leave_days"));
+                            item.setStatus(hrs.getString("status"));
+                            item.setAppliedDate(hrs.getDate("applied_date").toLocalDate());
+
+                            history.add(item);
+                        }
+
+                        dto.setLeaveHistory(history);
+                    }
+                }
+
+                return dto;
+            }
+        }
     }
 
     private User mapRowToUser(ResultSet rs) throws Exception {

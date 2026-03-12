@@ -1,6 +1,7 @@
 package com.techspire.project.repository;
 
 import com.techspire.project.dto.UpdateUserDto;
+import com.techspire.project.dto.UserDetailedReportDto;
 import com.techspire.project.dto.UserReportDto;
 import com.techspire.project.model.User;
 
@@ -23,4 +24,6 @@ public interface UserRepository {
     boolean deleteByIcNumber(String icNumber) throws Exception;
 
     List<UserReportDto> getYearlyReport() throws Exception;
+
+    UserDetailedReportDto getDetailedReportByIcNumber(String icNumber) throws Exception;
 }

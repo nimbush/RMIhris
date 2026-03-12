@@ -1,9 +1,6 @@
 package com.techspire.project.client.controller;
 
-import com.techspire.project.dto.CreateUserDto;
-import com.techspire.project.dto.LeaveApplyDto;
-import com.techspire.project.dto.UpdateUserDto;
-import com.techspire.project.dto.UserReportDto;
+import com.techspire.project.dto.*;
 import com.techspire.project.model.LeaveRecord;
 import com.techspire.project.model.User;
 import com.techspire.project.remote.Jdbc;
@@ -64,5 +61,8 @@ public class ClientController {
     }
     public boolean addLeaveCount(String icNumber, int extraLeave) throws Exception {
         return jdbc.addLeaveCount(icNumber, extraLeave);
+    }
+    public UserDetailedReportDto generateUserReport(String icNumber) throws Exception {
+        return jdbc.generateUserReport(icNumber);
     }
 }

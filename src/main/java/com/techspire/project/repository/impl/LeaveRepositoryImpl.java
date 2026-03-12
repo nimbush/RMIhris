@@ -2,7 +2,6 @@ package com.techspire.project.repository.impl;
 
 import com.techspire.project.config.DatabaseConfig;
 import com.techspire.project.model.LeaveRecord;
-import com.techspire.project.model.enums.LeaveStatus;
 import com.techspire.project.repository.LeaveRepository;
 
 import java.sql.Connection;
@@ -16,15 +15,17 @@ public class LeaveRepositoryImpl implements LeaveRepository {
 
     @Override
     public boolean save(LeaveRecord leaveRecord) throws Exception {
-        String sql = "INSERT INTO leave_records (userId, leaveDays, status, appliedDate) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO leave_records (user_id, leave_days, status, applied_date, from_date, to_date) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConfig.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setLong(1, leaveRecord.getUserId());
             ps.setInt(2, leaveRecord.getLeaveDays());
-            ps.setString(3, leaveRecord.getStatus().name());
+            ps.setString(3, leaveRecord.getStatus());
             ps.setDate(4, Date.valueOf(leaveRecord.getAppliedDate()));
+            ps.setDate(5, Date.valueOf(leaveRecord.getFromDate()));
+            ps.setDate(6, Date.valueOf(leaveRecord.getToDate()));
 
             return ps.executeUpdate() > 0;
         }
@@ -48,34 +49,19 @@ public class LeaveRepositoryImpl implements LeaveRepository {
     }
 
     @Override
-    public List<LeaveRecord> findByIcNumber(String icNumber) throws Exception {
-
-        String sql =
-                "SELECT lr.id, lr.userId, lr.leaveDays, lr.status, lr.appliedDate " +
-                        "FROM leave_records lr " +
-                        "JOIN users u ON lr.userId = u.id " +
-                        "WHERE u.icNumber = ?";
-
+    public List<LeaveRecord> findByUserId(Long userId) throws Exception {
+        String sql = "SELECT * FROM leave_records WHERE user_id = ?";
         List<LeaveRecord> records = new ArrayList<>();
 
         try (Connection connection = DatabaseConfig.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
 
-            ps.setString(1, icNumber);
+            ps.setLong(1, userId);
 
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                LeaveRecord record = new LeaveRecord();
-
-                record.setId(rs.getLong("id"));
-                record.setUserId(rs.getLong("userId"));
-                record.setLeaveDays(rs.getInt("leaveDays"));
-                record.setStatus(LeaveStatus.valueOf(rs.getString("status")));
-                record.setAppliedDate(rs.getDate("appliedDate").toLocalDate());
-
-                records.add(record);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    records.add(mapRowToLeaveRecord(rs));
+                }
             }
         }
 
@@ -118,11 +104,12 @@ public class LeaveRepositoryImpl implements LeaveRepository {
     private LeaveRecord mapRowToLeaveRecord(ResultSet rs) throws Exception {
         LeaveRecord record = new LeaveRecord();
         record.setId(rs.getLong("id"));
-        record.setUserId(rs.getLong("userId"));
-        record.setLeaveDays(rs.getInt("leaveDays"));
-        record.setStatus(LeaveStatus.fromString(rs.getString("status")));
-        record.setAppliedDate(rs.getDate("appliedDate").toLocalDate());
+        record.setUserId(rs.getLong("user_id"));
+        record.setLeaveDays(rs.getInt("leave_days"));
+        record.setStatus(rs.getString("status"));
+        record.setAppliedDate(rs.getDate("applied_date").toLocalDate());
+        record.setFromDate(rs.getDate("from_date").toLocalDate());
+        record.setToDate(rs.getDate("to_date").toLocalDate());
         return record;
     }
-
 }

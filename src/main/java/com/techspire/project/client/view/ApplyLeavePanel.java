@@ -2,14 +2,21 @@ package com.techspire.project.client.view;
 
 import com.techspire.project.client.controller.ClientController;
 import com.techspire.project.dto.LeaveApplyDto;
+import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 
 public class ApplyLeavePanel extends JPanel {
 
     private final ClientController controller;
     private final JTextField icNumberField;
+    private final JDateChooser fromDateChooser;
+    private final JDateChooser toDateChooser;
     private final JTextField leaveDaysField;
     private final JButton applyButton;
 
@@ -17,11 +24,14 @@ public class ApplyLeavePanel extends JPanel {
         this.controller = controller;
 
         this.icNumberField = new JTextField(24);
+        this.fromDateChooser = new JDateChooser();
+        this.toDateChooser = new JDateChooser();
         this.leaveDaysField = new JTextField(24);
         this.applyButton = new JButton("Apply Leave");
 
         this.icNumberField.setText(icNumber);
         this.icNumberField.setEditable(false);
+        this.leaveDaysField.setEditable(false);
 
         initUi();
         registerEvents();
@@ -42,8 +52,13 @@ public class ApplyLeavePanel extends JPanel {
         icNumberField.setFont(fieldFont);
         leaveDaysField.setFont(fieldFont);
 
+        fromDateChooser.setFont(fieldFont);
+        toDateChooser.setFont(fieldFont);
+
         icNumberField.setPreferredSize(fieldSize);
         leaveDaysField.setPreferredSize(fieldSize);
+        fromDateChooser.setPreferredSize(fieldSize);
+        toDateChooser.setPreferredSize(fieldSize);
 
         applyButton.setFont(buttonFont);
         applyButton.setPreferredSize(buttonSize);
@@ -65,6 +80,24 @@ public class ApplyLeavePanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 1;
+        JLabel fromLabel = new JLabel("From Date:");
+        fromLabel.setFont(labelFont);
+        add(fromLabel, gbc);
+
+        gbc.gridx = 1;
+        add(fromDateChooser, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        JLabel toLabel = new JLabel("To Date:");
+        toLabel.setFont(labelFont);
+        add(toLabel, gbc);
+
+        gbc.gridx = 1;
+        add(toDateChooser, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         JLabel leaveDaysLabel = new JLabel("Leave Days:");
         leaveDaysLabel.setFont(labelFont);
         add(leaveDaysLabel, gbc);
@@ -73,33 +106,73 @@ public class ApplyLeavePanel extends JPanel {
         add(leaveDaysField, gbc);
 
         gbc.gridx = 1;
-        gbc.gridy = 2;
+        gbc.gridy = 4;
         gbc.anchor = GridBagConstraints.CENTER;
         add(applyButton, gbc);
     }
 
     private void registerEvents() {
         applyButton.addActionListener(e -> applyLeave());
+
+        fromDateChooser.getDateEditor().addPropertyChangeListener(evt -> updateLeaveDays());
+        toDateChooser.getDateEditor().addPropertyChangeListener(evt -> updateLeaveDays());
+    }
+
+    private void updateLeaveDays() {
+        Date from = fromDateChooser.getDate();
+        Date to = toDateChooser.getDate();
+
+        if (from == null || to == null) {
+            leaveDaysField.setText("");
+            return;
+        }
+
+        LocalDate fromLocal = from.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate toLocal = to.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (toLocal.isBefore(fromLocal)) {
+            leaveDaysField.setText("");
+            return;
+        }
+
+        long days = ChronoUnit.DAYS.between(fromLocal, toLocal) + 1;
+        leaveDaysField.setText(String.valueOf(days));
     }
 
     private void applyLeave() {
         try {
-            String leaveDaysText = leaveDaysField.getText().trim();
+            Date from = fromDateChooser.getDate();
+            Date to = toDateChooser.getDate();
 
-            if (leaveDaysText.isEmpty()) {
+            if (from == null || to == null) {
                 JOptionPane.showMessageDialog(
                         this,
-                        "Leave days are required.",
+                        "Please select both From Date and To Date.",
                         "Validation Error",
                         JOptionPane.WARNING_MESSAGE
                 );
                 return;
             }
 
-            int leaveDays = Integer.parseInt(leaveDaysText);
+            LocalDate fromLocal = from.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate toLocal = to.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            if (toLocal.isBefore(fromLocal)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "To Date cannot be before From Date.",
+                        "Validation Error",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            int leaveDays = (int) (ChronoUnit.DAYS.between(fromLocal, toLocal) + 1);
 
             LeaveApplyDto dto = new LeaveApplyDto();
             dto.setIcNumber(icNumberField.getText().trim());
+            dto.setFromDate(fromLocal);
+            dto.setToDate(toLocal);
             dto.setLeaveDays(leaveDays);
 
             String result = controller.applyLeave(dto);
@@ -111,15 +184,10 @@ public class ApplyLeavePanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE
             );
 
+            fromDateChooser.setDate(null);
+            toDateChooser.setDate(null);
             leaveDaysField.setText("");
 
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Leave days must be a valid number.",
-                    "Validation Error",
-                    JOptionPane.WARNING_MESSAGE
-            );
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(
