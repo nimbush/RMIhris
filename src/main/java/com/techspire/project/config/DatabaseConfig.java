@@ -6,8 +6,8 @@ import java.sql.*;
 
 public class DatabaseConfig {
 
-    private static final String ROOT_URL = "jdbc:mysql://localhost:3306/?useSSL=false&serverTimezone=UTC";
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/newDatabase?useSSL=false&serverTimezone=UTC";
+    private static final String ROOT_URL = "jdbc:mysql://localhost:3307/?useSSL=false&serverTimezone=UTC";
+    private static final String DB_URL = "jdbc:mysql://localhost:3307/newDatabase?useSSL=false&serverTimezone=UTC";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "";
 
@@ -72,7 +72,7 @@ public class DatabaseConfig {
             );
         }
 
-        createDefaultHrAdmin();
+//        createDefaultHrAdmin();
     }
 
     private static void createDefaultHrAdmin() throws SQLException {
@@ -92,21 +92,21 @@ public class DatabaseConfig {
                 }
             }
 
-//            if (userId == null) {
-//                try (PreparedStatement ps = connection.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
-//                    ps.setString(1, "HR");
-//                    ps.setString(2, "USER");
-//                    ps.setString(3, "HR123");
-//                    ps.setString(4, "HR");
-//                    ps.setInt(5, 30);
-//                    ps.executeUpdate();
-//
-//                    try (ResultSet keys = ps.getGeneratedKeys()) {
-//                        if (keys.next()) {
-//                            userId = keys.getLong(1);
-//                        }
-//                    }
-//                }
+            if (userId == null) {
+                try (PreparedStatement ps = connection.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setString(1, "HR");
+                    ps.setString(2, "USER");
+                    ps.setString(3, "HR123");
+                    ps.setString(4, "HR");
+                    ps.setInt(5, 30);
+                    ps.executeUpdate();
+
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        if (keys.next()) {
+                            userId = keys.getLong(1);
+                        }
+                    }
+                }
 
                 if (userId != null) {
                     try (PreparedStatement ps = connection.prepareStatement(insertCredentialSql)) {
@@ -119,5 +119,5 @@ public class DatabaseConfig {
                 }
             }
         }
-//    }
+    }
 }

@@ -1,5 +1,6 @@
 package com.techspire.project.client;
 
+import com.techspire.project.client.view.ui.DarkTheme;
 import com.techspire.project.remote.Jdbc;
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ public class Client {
 
     public static void main(String[] args) {
         try {
+            DarkTheme.apply();
             Registry registry = LocateRegistry.getRegistry("localhost", 1099);
             Jdbc jdbc = (Jdbc) registry.lookup("nimesh");
 

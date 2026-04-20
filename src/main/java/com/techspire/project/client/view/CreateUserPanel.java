@@ -1,31 +1,32 @@
 package com.techspire.project.client.view;
 
 import com.techspire.project.client.controller.ClientController;
+import com.techspire.project.client.view.ui.BasePanel;
+import com.techspire.project.client.view.ui.DarkTheme;
+import com.techspire.project.client.view.ui.DialogUtil;
+import com.techspire.project.client.view.ui.ModernButton;
 import com.techspire.project.dto.CreateUserDto;
 import com.techspire.project.model.enums.UserType;
 
 import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.plaf.basic.BasicComboBoxUI;
 import java.awt.*;
 
-public class CreateUserPanel extends JPanel {
+public class CreateUserPanel extends BasePanel {
 
     private final ClientController controller;
-    private final JTextField firstNameField;
-    private final JTextField lastNameField;
-    private final JTextField icNumberField;
-    private final JTextField usernameField;
-    private final JComboBox<String> userTypeDropdown;
-    private final JTextField leaveCountField;
+
+    private final JTextField firstNameField = new JTextField(24);
+    private final JTextField lastNameField = new JTextField(24);
+    private final JTextField icNumberField = new JTextField(24);
+    private final JTextField usernameField = new JTextField(24);
+    private final JTextField leaveCountField = new JTextField(24);
+    private final JComboBox<String> userTypeDropdown = new JComboBox<>();
 
     public CreateUserPanel(ClientController controller) {
         this.controller = controller;
-        this.firstNameField = new JTextField(24);
-        this.lastNameField = new JTextField(24);
-        this.icNumberField = new JTextField(24);
-        this.usernameField = new JTextField(24);
-        this.leaveCountField = new JTextField(24);
 
-        this.userTypeDropdown = new JComboBox<>();
         userTypeDropdown.addItem("Select Role");
         userTypeDropdown.addItem("HR");
         userTypeDropdown.addItem("EMPLOYEE");
@@ -36,109 +37,205 @@ public class CreateUserPanel extends JPanel {
 
     private void initUi() {
         setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createTitledBorder("Create User"));
-        setBackground(Color.WHITE);
+        setBackground(DarkTheme.BG);
 
-        Font labelFont = new Font("Segoe UI", Font.BOLD, 16);
-        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 16);
-        Font buttonFont = new Font("Segoe UI", Font.BOLD, 18);
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(DarkTheme.PANEL);
+        card.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(24, 24, 24, 24)
+        ));
 
-        Dimension fieldSize = new Dimension(300, 40);
-        Dimension comboSize = new Dimension(300, 40);
-        Dimension buttonSize = new Dimension(220, 45);
+        Font titleFont = new Font("Segoe UI", Font.BOLD, 22);
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 15);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 15);
 
-        firstNameField.setFont(fieldFont);
-        lastNameField.setFont(fieldFont);
-        icNumberField.setFont(fieldFont);
-        usernameField.setFont(fieldFont);
-        leaveCountField.setFont(fieldFont);
-        userTypeDropdown.setFont(fieldFont);
+        Dimension fieldSize = new Dimension(320, 42);
 
-        firstNameField.setPreferredSize(fieldSize);
-        lastNameField.setPreferredSize(fieldSize);
-        icNumberField.setPreferredSize(fieldSize);
-        usernameField.setPreferredSize(fieldSize);
-        leaveCountField.setPreferredSize(fieldSize);
-        userTypeDropdown.setPreferredSize(comboSize);
+        JLabel titleLabel = new JLabel("Create User");
+        titleLabel.setForeground(DarkTheme.TEXT);
+        titleLabel.setFont(titleFont);
 
-        JButton createBtn = new JButton("Create User");
-        createBtn.setFont(buttonFont);
-        createBtn.setPreferredSize(buttonSize);
-        createBtn.setFocusPainted(false);
+        styleTextField(firstNameField, fieldFont, fieldSize);
+        styleTextField(lastNameField, fieldFont, fieldSize);
+        styleTextField(icNumberField, fieldFont, fieldSize);
+        styleTextField(usernameField, fieldFont, fieldSize);
+        styleTextField(leaveCountField, fieldFont, fieldSize);
+        styleComboBox(userTypeDropdown, fieldFont, fieldSize);
+
+        ModernButton createBtn = new ModernButton("Create User");
+        createBtn.setPreferredSize(new Dimension(220, 44));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(14, 14, 14, 14);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        JLabel firstNameLabel = new JLabel("First Name:");
-        firstNameLabel.setFont(labelFont);
-        add(firstNameLabel, gbc);
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(0, 10, 20, 10);
+        card.add(titleLabel, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        addRow(card, gbc, 1, "First Name:", firstNameField, labelFont);
+        addRow(card, gbc, 2, "Last Name:", lastNameField, labelFont);
+        addRow(card, gbc, 3, "IC Number:", icNumberField, labelFont);
+        addRow(card, gbc, 4, "Username:", usernameField, labelFont);
+        addRow(card, gbc, 5, "User Type:", userTypeDropdown, labelFont);
+        addRow(card, gbc, 6, "Leave Count:", leaveCountField, labelFont);
 
         gbc.gridx = 1;
-        add(firstNameField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        JLabel lastNameLabel = new JLabel("Last Name:");
-        lastNameLabel.setFont(labelFont);
-        add(lastNameLabel, gbc);
-
-        gbc.gridx = 1;
-        add(lastNameField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        JLabel icLabel = new JLabel("IC Number:");
-        icLabel.setFont(labelFont);
-        add(icLabel, gbc);
-
-        gbc.gridx = 1;
-        add(icNumberField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameLabel.setFont(labelFont);
-        add(usernameLabel, gbc);
-
-        gbc.gridx = 1;
-        add(usernameField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        JLabel userTypeLabel = new JLabel("User Type:");
-        userTypeLabel.setFont(labelFont);
-        add(userTypeLabel, gbc);
-
-        gbc.gridx = 1;
-        add(userTypeDropdown, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        JLabel leaveCountLabel = new JLabel("Leave Count:");
-        leaveCountLabel.setFont(labelFont);
-        add(leaveCountLabel, gbc);
-
-        gbc.gridx = 1;
-        add(leaveCountField, gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.anchor = GridBagConstraints.CENTER;
-        add(createBtn, gbc);
+        gbc.insets = new Insets(20, 10, 0, 10);
+        card.add(createBtn, gbc);
+
+        add(card);
 
         createBtn.addActionListener(e -> createUser());
     }
 
+    private void addRow(JPanel panel, GridBagConstraints gbc, int y,
+                        String labelText, JComponent field, Font font) {
+
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        JLabel label = new JLabel(labelText);
+        label.setFont(font);
+        label.setForeground(DarkTheme.TEXT);
+        panel.add(label, gbc);
+
+        gbc.gridx = 1;
+        panel.add(field, gbc);
+    }
+
+    private void styleTextField(JTextField field, Font font, Dimension size) {
+        field.setFont(font);
+        field.setPreferredSize(size);
+        field.setBackground(new Color(28, 28, 28));
+        field.setForeground(DarkTheme.TEXT);
+        field.setCaretColor(DarkTheme.TEXT);
+        field.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(8, 12, 8, 12)
+        ));
+    }
+
+    private void styleComboBox(JComboBox<String> comboBox, Font font, Dimension size) {
+
+        comboBox.setFont(font);
+        comboBox.setPreferredSize(size);
+        comboBox.setBackground(new Color(28, 28, 28));
+        comboBox.setForeground(DarkTheme.TEXT);
+        comboBox.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(2, 8, 2, 8)
+        ));
+        comboBox.setFocusable(false);
+
+        comboBox.setUI(new BasicComboBoxUI() {
+
+            @Override
+            protected JButton createArrowButton() {
+
+                return new JButton() {
+
+                    {
+                        setPreferredSize(new Dimension(40, 40));
+                        setBackground(new Color(28, 28, 28));
+                        setForeground(Color.WHITE);
+                        setBorder(BorderFactory.createEmptyBorder());
+                        setFocusPainted(false);
+                        setOpaque(true);
+                        setContentAreaFilled(false);
+                    }
+
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        g.setColor(new Color(28, 28, 28));
+                        g.fillRect(0, 0, getWidth(), getHeight());
+
+                        g.setColor(Color.WHITE);
+                        int x = getWidth() / 2;
+                        int y = getHeight() / 2;
+
+                        int size = 6;
+                        Polygon arrow = new Polygon();
+                        arrow.addPoint(x - size, y - 2);
+                        arrow.addPoint(x + size, y - 2);
+                        arrow.addPoint(x, y + size);
+
+                        g.fillPolygon(arrow);
+                    }
+                };
+            }
+        });
+
+        comboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus
+            ) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(
+                        list, value, index, isSelected, cellHasFocus
+                );
+
+                label.setFont(font);
+                label.setBorder(new EmptyBorder(6, 8, 6, 8));
+                label.setOpaque(true);
+
+                if (index == -1) {
+                    label.setBackground(new Color(28, 28, 28));
+                    label.setForeground(DarkTheme.TEXT);
+                } else if (isSelected) {
+                    label.setBackground(DarkTheme.ACCENT);
+                    label.setForeground(Color.WHITE);
+                } else {
+                    label.setBackground(new Color(32, 33, 36));
+                    label.setForeground(new Color(232, 234, 237));
+                }
+
+                return label;
+            }
+        });
+
+        SwingUtilities.invokeLater(() -> {
+            for (Component c : comboBox.getComponents()) {
+                if (c instanceof JButton btn) {
+                    btn.setBackground(new Color(28, 28, 28));
+                    btn.setForeground(Color.WHITE);
+                    btn.setOpaque(true);
+                    btn.setContentAreaFilled(true);
+                    btn.setBorder(BorderFactory.createEmptyBorder());
+                    btn.setFocusPainted(false);
+                }
+            }
+        });
+    }
+
     private void createUser() {
         try {
-            String selectedRole = (String) userTypeDropdown.getSelectedItem();
+            String role = (String) userTypeDropdown.getSelectedItem();
 
-            if (selectedRole == null || selectedRole.equals("Select Role")) {
-                JOptionPane.showMessageDialog(this, "Please select a user role.");
+            if (role == null || role.equals("Select Role")) {
+                DialogUtil.styleMessageDialog();
+                JOptionPane.showMessageDialog(this, "Select role", "Message", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            boolean confirmed = DialogUtil.showConfirmDialog(
+                    this,
+                    "Confirm Create User",
+                    "Are you sure you want to create this user?"
+            );
+
+            if (!confirmed) {
                 return;
             }
 
@@ -147,36 +244,27 @@ public class CreateUserPanel extends JPanel {
             dto.setLastName(lastNameField.getText().trim());
             dto.setIcNumber(icNumberField.getText().trim());
             dto.setUsername(usernameField.getText().trim());
-            dto.setUserType(UserType.valueOf(selectedRole));
+            dto.setUserType(UserType.valueOf(role));
             dto.setLeaveCount(Integer.parseInt(leaveCountField.getText().trim()));
 
-            boolean result = controller.createUser(dto);
-
-            if (result) {
-                JOptionPane.showMessageDialog(this, "User created successfully.\nDefault password: Pass@123");
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to create user");
+            if (controller.createUser(dto)) {
+                DialogUtil.styleMessageDialog();
+                JOptionPane.showMessageDialog(this, "User created (Password: Pass@123)", "Success", JOptionPane.INFORMATION_MESSAGE);
+                clear();
             }
 
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Leave count must be a valid number.");
         } catch (Exception ex) {
-            showError(ex);
+            DialogUtil.styleMessageDialog();
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void clearForm() {
+    private void clear() {
         firstNameField.setText("");
         lastNameField.setText("");
         icNumberField.setText("");
         usernameField.setText("");
         leaveCountField.setText("");
         userTypeDropdown.setSelectedIndex(0);
-        firstNameField.requestFocus();
-    }
-
-    private void showError(Exception ex) {
-        JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
     }
 }

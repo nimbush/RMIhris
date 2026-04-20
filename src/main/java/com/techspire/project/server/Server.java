@@ -11,23 +11,24 @@ public class Server {
 
     public static void main(String[] args) {
         try {
+            System.out.println("Starting server...");
 
-            // initialize DB and tables
             DatabaseConfig.initializeDatabase();
+            System.out.println("Database initialized");
 
-            // start RMI registry
             Registry registry = LocateRegistry.createRegistry(1099);
+            System.out.println("Registry created");
 
-            // create remote object
             Jdbc jdbc = new JdbcRemoteImpl();
+            System.out.println("Remote object created");
 
-            // bind service
             registry.rebind("nimesh", jdbc);
+            System.out.println("Service bound");
 
             System.out.println("Server is ready");
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 }

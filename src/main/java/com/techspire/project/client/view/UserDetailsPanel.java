@@ -1,24 +1,33 @@
 package com.techspire.project.client.view;
 
 import com.techspire.project.client.controller.ClientController;
+import com.techspire.project.client.view.ui.BasePanel;
+import com.techspire.project.client.view.ui.DarkTheme;
+import com.techspire.project.client.view.ui.DialogUtil;
+import com.techspire.project.client.view.ui.ModernButton;
 import com.techspire.project.dto.UpdateUserDto;
 import com.techspire.project.model.User;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.List;
 import java.util.regex.Pattern;
 
+public class UserDetailsPanel extends BasePanel {
 
-public class UserDetailsPanel extends JPanel {
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^(97|98)\\d{8}$");
 
     private final ClientController controller;
     private final DefaultTableModel tableModel;
     private final JTable table;
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^(97|98)\\d{8}$");
 
     public UserDetailsPanel(ClientController controller) {
         this.controller = controller;
@@ -42,8 +51,106 @@ public class UserDetailsPanel extends JPanel {
 
     private void initUi() {
         setLayout(new BorderLayout());
+        setBackground(DarkTheme.BG);
 
-        table.setRowHeight(40);
+        JPanel card = new JPanel(new BorderLayout(0, 16));
+        card.setBackground(DarkTheme.PANEL);
+        card.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(20, 20, 20, 20)
+        ));
+
+        JLabel titleLabel = new JLabel("User Details");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titleLabel.setForeground(DarkTheme.TEXT);
+
+        styleTable();
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(DarkTheme.PANEL);
+        scrollPane.setBackground(DarkTheme.PANEL);
+
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(scrollPane, BorderLayout.CENTER);
+
+        add(card, BorderLayout.CENTER);
+    }
+
+    private void styleTable() {
+        table.setRowHeight(42);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setBackground(DarkTheme.PANEL);
+        table.setForeground(DarkTheme.TEXT);
+        table.setSelectionBackground(DarkTheme.ACCENT);
+        table.setSelectionForeground(Color.WHITE);
+        table.setGridColor(DarkTheme.BORDER);
+        table.setShowGrid(true);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFillsViewportHeight(true);
+        table.setBorder(BorderFactory.createEmptyBorder());
+
+        JTableHeader header = table.getTableHeader();
+        header.setPreferredSize(new Dimension(header.getWidth(), 40));
+        header.setReorderingAllowed(false);
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table,
+                    Object value,
+                    boolean isSelected,
+                    boolean hasFocus,
+                    int row,
+                    int column
+            ) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column
+                );
+
+                label.setBackground(new Color(32, 33, 36));
+                label.setForeground(new Color(232, 234, 237));
+                label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                label.setBorder(BorderFactory.createLineBorder(DarkTheme.BORDER));
+                label.setOpaque(true);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+
+                return label;
+            }
+        });
+
+        DefaultTableCellRenderer bodyRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table,
+                    Object value,
+                    boolean isSelected,
+                    boolean hasFocus,
+                    int row,
+                    int column
+            ) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column
+                );
+
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setBorder(new EmptyBorder(0, 8, 0, 8));
+
+                if (isSelected) {
+                    label.setBackground(DarkTheme.ACCENT);
+                    label.setForeground(Color.WHITE);
+                } else {
+                    label.setBackground(DarkTheme.PANEL);
+                    label.setForeground(DarkTheme.TEXT);
+                }
+
+                return label;
+            }
+        };
+
+        for (int i = 0; i < table.getColumnCount() - 1; i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(bodyRenderer);
+        }
+
         table.getColumn("Action").setMinWidth(180);
         table.getColumn("Action").setPreferredWidth(200);
         table.getColumn("Action").setMaxWidth(220);
@@ -52,8 +159,6 @@ public class UserDetailsPanel extends JPanel {
         table.getColumn("Action").setCellEditor(
                 new UserActionCellEditor(new JCheckBox(), table, controller, this)
         );
-
-        add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
     public void loadUsers() {
@@ -78,25 +183,43 @@ public class UserDetailsPanel extends JPanel {
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showError(ex.getMessage());
         }
+    }
+
+    private void showError(String message) {
+        DialogUtil.styleMessageDialog();
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+
+    private void showInfo(String message) {
+        DialogUtil.styleMessageDialog();
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                "Info",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
     private static class UserActionCellRenderer extends JPanel implements TableCellRenderer {
 
-        private final JButton editButton = new JButton("Edit");
-        private final JButton deleteButton = new JButton("Delete");
+        private final ModernButton editButton = new ModernButton("Edit");
+        private final ModernButton deleteButton = new ModernButton("Delete");
 
         public UserActionCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 2));
+            setLayout(new FlowLayout(FlowLayout.CENTER, 8, 4));
+            setOpaque(true);
+            setBackground(DarkTheme.PANEL);
 
-            editButton.setFocusPainted(false);
-            deleteButton.setFocusPainted(false);
+            editButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            deleteButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            deleteButton.setDangerStyle();
 
             add(editButton);
             add(deleteButton);
@@ -111,15 +234,16 @@ public class UserDetailsPanel extends JPanel {
                 int row,
                 int column
         ) {
+            setBackground(isSelected ? DarkTheme.ACCENT : DarkTheme.PANEL);
             return this;
         }
     }
 
     private static class UserActionCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2));
-        private final JButton editButton = new JButton("Edit");
-        private final JButton deleteButton = new JButton("Delete");
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
+        private final ModernButton editButton = new ModernButton("Edit");
+        private final ModernButton deleteButton = new ModernButton("Delete");
 
         private final JTable table;
         private final ClientController controller;
@@ -136,8 +260,12 @@ public class UserDetailsPanel extends JPanel {
             this.controller = controller;
             this.parentPanel = parentPanel;
 
-            editButton.setFocusPainted(false);
-            deleteButton.setFocusPainted(false);
+            panel.setOpaque(true);
+            panel.setBackground(DarkTheme.PANEL);
+
+            editButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            deleteButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            deleteButton.setDangerStyle();
 
             panel.add(editButton);
             panel.add(deleteButton);
@@ -155,6 +283,7 @@ public class UserDetailsPanel extends JPanel {
                 int column
         ) {
             currentRow = row;
+            panel.setBackground(DarkTheme.PANEL);
             return panel;
         }
 
@@ -177,85 +306,95 @@ public class UserDetailsPanel extends JPanel {
                 JTextField phoneField = new JTextField(phone);
                 JTextField addressField = new JTextField(address);
                 JTextField addLeaveField = new JTextField();
-                addLeaveField.setToolTipText("Enter extra leave to add");
 
-                Object[] fields = {
-                        "Father Name:", fatherField,
-                        "Mother Name:", motherField,
-                        "Phone Number:", phoneField,
-                        "Address:", addressField,
-                        "Current Leave Count:", new JLabel(String.valueOf(currentLeaveCount)),
-                        "Add Leave Count:", addLeaveField
-                };
+                styleDialogField(fatherField);
+                styleDialogField(motherField);
+                styleDialogField(phoneField);
+                styleDialogField(addressField);
+                styleDialogField(addLeaveField);
 
-                int option = JOptionPane.showConfirmDialog(
+                JLabel currentLeaveLabel = new JLabel(String.valueOf(currentLeaveCount));
+                currentLeaveLabel.setForeground(DarkTheme.TEXT);
+                currentLeaveLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+                JPanel form = new JPanel(new GridBagLayout());
+                form.setBackground(DarkTheme.PANEL);
+                form.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(8, 8, 8, 8);
+                gbc.anchor = GridBagConstraints.WEST;
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+
+                addDialogRow(form, gbc, 0, "Father Name:", fatherField);
+                addDialogRow(form, gbc, 1, "Mother Name:", motherField);
+                addDialogRow(form, gbc, 2, "Phone Number:", phoneField);
+                addDialogRow(form, gbc, 3, "Address:", addressField);
+                addDialogRow(form, gbc, 4, "Current Leave Count:", currentLeaveLabel);
+                addDialogRow(form, gbc, 5, "Add Leave Count:", addLeaveField);
+
+                boolean confirmed = DialogUtil.showFormDialog(
                         parentPanel,
-                        fields,
                         "Edit User - " + icNumber,
-                        JOptionPane.OK_CANCEL_OPTION
+                        form,
+                        "OK"
                 );
 
-                if (option == JOptionPane.OK_OPTION) {
-                    String phoneNumber = phoneField.getText().trim();
+                if (!confirmed) {
+                    return;
+                }
 
-                    if (!phoneNumber.isEmpty() && !PHONE_PATTERN.matcher(phoneNumber).matches()) {
-                        JOptionPane.showMessageDialog(
-                                parentPanel,
-                                "Phone number must be a valid Nepali mobile number starting with 97 or 98 and be 10 digits long.",
-                                "Validation Error",
-                                JOptionPane.WARNING_MESSAGE
-                        );
+                String phoneNumber = phoneField.getText().trim();
+
+                if (!phoneNumber.isEmpty() && !PHONE_PATTERN.matcher(phoneNumber).matches()) {
+                    parentPanel.showError(
+                            "Phone number must be a valid Nepali mobile number starting with 97 or 98 and be 10 digits long."
+                    );
+                    fireEditingStopped();
+                    return;
+                }
+
+                int extraLeave = 0;
+                String addLeaveText = addLeaveField.getText().trim();
+
+                if (!addLeaveText.isEmpty()) {
+                    extraLeave = Integer.parseInt(addLeaveText);
+                    if (extraLeave < 0) {
+                        parentPanel.showError("Added leave cannot be negative.");
                         fireEditingStopped();
                         return;
                     }
+                }
 
-                    int extraLeave = 0;
-                    String addLeaveText = addLeaveField.getText().trim();
+                UpdateUserDto dto = new UpdateUserDto();
+                dto.setIcNumber(icNumber);
+                dto.setFatherName(fatherField.getText().trim());
+                dto.setMotherName(motherField.getText().trim());
+                dto.setPhoneNumber(phoneNumber);
+                dto.setAddress(addressField.getText().trim());
 
-                    if (!addLeaveText.isEmpty()) {
-                        extraLeave = Integer.parseInt(addLeaveText);
-                        if (extraLeave < 0) {
-                            JOptionPane.showMessageDialog(parentPanel, "Added leave cannot be negative.");
+                boolean updated = controller.updateUser(dto);
+
+                if (updated) {
+                    if (extraLeave > 0) {
+                        boolean leaveUpdated = controller.addLeaveCount(icNumber, extraLeave);
+                        if (!leaveUpdated) {
+                            parentPanel.showError("User updated, but failed to add leave count.");
+                            parentPanel.loadUsers();
                             fireEditingStopped();
                             return;
                         }
                     }
 
-                    UpdateUserDto dto = new UpdateUserDto();
-                    dto.setIcNumber(icNumber);
-                    dto.setFatherName(fatherField.getText().trim());
-                    dto.setMotherName(motherField.getText().trim());
-                    dto.setPhoneNumber(phoneNumber);
-                    dto.setAddress(addressField.getText().trim());
-
-                    boolean updated = controller.updateUser(dto);
-
-                    if (updated) {
-                        if (extraLeave > 0) {
-                            boolean leaveUpdated = controller.addLeaveCount(icNumber, extraLeave);
-                            if (!leaveUpdated) {
-                                JOptionPane.showMessageDialog(parentPanel, "User updated, but failed to add leave count.");
-                                parentPanel.loadUsers();
-                                fireEditingStopped();
-                                return;
-                            }
-                        }
-
-                        JOptionPane.showMessageDialog(parentPanel, "User updated successfully.");
-                        parentPanel.loadUsers();
-                    } else {
-                        JOptionPane.showMessageDialog(parentPanel, "Failed to update user.");
-                    }
+                    parentPanel.showInfo("User updated successfully.");
+                    parentPanel.loadUsers();
+                } else {
+                    parentPanel.showError("Failed to update user.");
                 }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(parentPanel, "Add Leave Count must be a valid number.");
+                parentPanel.showError("Add Leave Count must be a valid number.");
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        parentPanel,
-                        ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+                parentPanel.showError(ex.getMessage());
             } finally {
                 fireEditingStopped();
             }
@@ -265,33 +404,55 @@ public class UserDetailsPanel extends JPanel {
             try {
                 String icNumber = table.getValueAt(currentRow, 3).toString();
 
-                int confirm = JOptionPane.showConfirmDialog(
+                boolean confirmed = DialogUtil.showConfirmDialog(
                         parentPanel,
-                        "Delete user with IC Number: " + icNumber + "?",
                         "Confirm Delete",
-                        JOptionPane.YES_NO_OPTION
+                        "Delete user with IC Number: " + icNumber + "?"
                 );
 
-                if (confirm == JOptionPane.YES_OPTION) {
-                    boolean deleted = controller.deleteUser(icNumber);
+                if (!confirmed) {
+                    return;
+                }
 
-                    if (deleted) {
-                        JOptionPane.showMessageDialog(parentPanel, "User deleted successfully.");
-                        parentPanel.loadUsers();
-                    } else {
-                        JOptionPane.showMessageDialog(parentPanel, "Failed to delete user.");
-                    }
+                boolean deleted = controller.deleteUser(icNumber);
+
+                if (deleted) {
+                    parentPanel.showInfo("User deleted successfully.");
+                    parentPanel.loadUsers();
+                } else {
+                    parentPanel.showError("Failed to delete user.");
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        parentPanel,
-                        ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+                parentPanel.showError(ex.getMessage());
             } finally {
                 fireEditingStopped();
             }
+        }
+
+        private static void addDialogRow(JPanel panel, GridBagConstraints gbc, int row, String labelText, JComponent field) {
+            JLabel label = new JLabel(labelText);
+            label.setForeground(DarkTheme.TEXT);
+            label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.weightx = 0;
+            panel.add(label, gbc);
+
+            gbc.gridx = 1;
+            gbc.weightx = 1.0;
+            panel.add(field, gbc);
+        }
+
+        private static void styleDialogField(JTextField field) {
+            field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            field.setBackground(new Color(36, 36, 36));
+            field.setForeground(DarkTheme.TEXT);
+            field.setCaretColor(DarkTheme.TEXT);
+            field.setBorder(new CompoundBorder(
+                    new LineBorder(DarkTheme.BORDER, 1, true),
+                    new EmptyBorder(8, 10, 8, 10)
+            ));
         }
 
         private String safeValue(int row, int column) {

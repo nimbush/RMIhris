@@ -3,43 +3,50 @@ package com.techspire.project.client.view;
 import com.techspire.project.client.EmployeeDashboardFrame;
 import com.techspire.project.client.HrDashboardFrame;
 import com.techspire.project.client.LoginFrame;
+import com.techspire.project.client.view.ui.BasePanel;
+import com.techspire.project.client.view.ui.DarkTheme;
+import com.techspire.project.client.view.ui.DialogUtil;
+import com.techspire.project.client.view.ui.ModernButton;
 import com.techspire.project.dto.LoginResponseDto;
 import com.techspire.project.model.enums.UserType;
 import com.techspire.project.remote.Jdbc;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 
-public class LoginPanel extends JPanel {
+public class LoginPanel extends BasePanel {
 
     private final Jdbc jdbc;
     private final JTextField icNumberField;
     private final JTextField usernameField;
     private final JPasswordField passwordField;
-    private final JButton loginButton;
+    private final ModernButton loginButton;
 
     public LoginPanel(Jdbc jdbc) {
         this.jdbc = jdbc;
         this.icNumberField = new JTextField(22);
         this.usernameField = new JTextField(22);
         this.passwordField = new JPasswordField(22);
-        this.loginButton = new JButton("Login Now");
+        this.loginButton = new ModernButton("Login Now");
 
         initUi();
         registerEvents();
     }
 
     private void initUi() {
-        setBackground(new Color(245, 245, 248));
+        setBackground(DarkTheme.BG);
         setLayout(new GridBagLayout());
 
         JPanel card = new JPanel();
-        card.setBackground(Color.WHITE);
+        card.setBackground(DarkTheme.PANEL);
         card.setPreferredSize(new Dimension(430, 500));
         card.setLayout(new GridBagLayout());
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 230, 235), 1),
-                BorderFactory.createEmptyBorder(35, 35, 35, 35)
+        card.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(35, 35, 35, 35)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -50,16 +57,16 @@ public class LoginPanel extends JPanel {
 
         JLabel titleLabel = new JLabel("LOGIN", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 34));
-        titleLabel.setForeground(Color.BLACK);
+        titleLabel.setForeground(DarkTheme.TEXT);
 
         JLabel subtitleLabel = new JLabel("Sign in to continue", SwingConstants.CENTER);
         subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        subtitleLabel.setForeground(new Color(110, 110, 120));
+        subtitleLabel.setForeground(new Color(160, 160, 170));
 
         styleField(icNumberField);
         styleField(usernameField);
         styleField(passwordField);
-        styleLoginButton(loginButton);
+        loginButton.setPreferredSize(new Dimension(160, 46));
 
         gbc.gridy = 0;
         card.add(titleLabel, gbc);
@@ -89,7 +96,7 @@ public class LoginPanel extends JPanel {
 
         JLabel jLabel = new JLabel(label);
         jLabel.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        jLabel.setForeground(new Color(60, 60, 70));
+        jLabel.setForeground(new Color(190, 190, 200));
 
         panel.add(jLabel, BorderLayout.NORTH);
         panel.add(field, BorderLayout.CENTER);
@@ -99,20 +106,19 @@ public class LoginPanel extends JPanel {
     private void styleField(JComponent field) {
         field.setFont(new Font("Segoe UI", Font.PLAIN, 17));
         field.setPreferredSize(new Dimension(320, 42));
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 230), 1),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        field.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(8, 12, 8, 12)
         ));
-        field.setBackground(new Color(248, 248, 252));
-    }
+        field.setBackground(new Color(36, 36, 36));
+        field.setForeground(DarkTheme.TEXT);
 
-    private void styleLoginButton(JButton button) {
-        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        button.setForeground(Color.WHITE);
-        button.setBackground(new Color(106, 90, 249));
-        button.setFocusPainted(false);
-        button.setPreferredSize(new Dimension(160, 46));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+        if (field instanceof JTextField textField) {
+            textField.setCaretColor(DarkTheme.TEXT);
+        }
+        if (field instanceof JPasswordField passwordField) {
+            passwordField.setCaretColor(DarkTheme.TEXT);
+        }
     }
 
     private void registerEvents() {
@@ -128,18 +134,21 @@ public class LoginPanel extends JPanel {
         String password = new String(passwordField.getPassword()).trim();
 
         if (icNumber.isEmpty()) {
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(this, "IC number is required.", "Validation Error", JOptionPane.WARNING_MESSAGE);
             icNumberField.requestFocus();
             return;
         }
 
         if (username.isEmpty()) {
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(this, "Username is required.", "Validation Error", JOptionPane.WARNING_MESSAGE);
             usernameField.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(this, "Password is required.", "Validation Error", JOptionPane.WARNING_MESSAGE);
             passwordField.requestFocus();
             return;
@@ -149,11 +158,13 @@ public class LoginPanel extends JPanel {
             LoginResponseDto response = jdbc.logIn(icNumber, username, password);
 
             if (response == null) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, "Login failed. No response from server.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             if (!response.isSuccess()) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, response.getMessage(), "Login Failed", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -162,6 +173,7 @@ public class LoginPanel extends JPanel {
                 boolean changed = showChangePasswordDialog(response.getIcNumber());
 
                 if (!changed) {
+                    DialogUtil.styleMessageDialog();
                     JOptionPane.showMessageDialog(
                             this,
                             "You must change your default password before continuing.",
@@ -176,6 +188,7 @@ public class LoginPanel extends JPanel {
 
         } catch (Exception ex) {
             ex.printStackTrace();
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(
                     this,
                     "Error during login: " + ex.getMessage(),
@@ -190,21 +203,30 @@ public class LoginPanel extends JPanel {
             JPasswordField newPasswordField = new JPasswordField(20);
             JPasswordField confirmPasswordField = new JPasswordField(20);
 
+            styleDialogPasswordField(newPasswordField);
+            styleDialogPasswordField(confirmPasswordField);
+
+            JLabel newPasswordLabel = new JLabel("New Password:");
+            JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+            newPasswordLabel.setForeground(DarkTheme.TEXT);
+            confirmPasswordLabel.setForeground(DarkTheme.TEXT);
+
             JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
-            panel.add(new JLabel("New Password:"));
+            panel.setBackground(DarkTheme.PANEL);
+            panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+            panel.add(newPasswordLabel);
             panel.add(newPasswordField);
-            panel.add(new JLabel("Confirm Password:"));
+            panel.add(confirmPasswordLabel);
             panel.add(confirmPasswordField);
 
-            int option = JOptionPane.showConfirmDialog(
+            boolean confirmed = DialogUtil.showFormDialog(
                     this,
-                    panel,
                     "Change Default Password",
-                    JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.WARNING_MESSAGE
+                    panel,
+                    "OK"
             );
 
-            if (option != JOptionPane.OK_OPTION) {
+            if (!confirmed) {
                 return false;
             }
 
@@ -212,16 +234,19 @@ public class LoginPanel extends JPanel {
             String confirmPassword = new String(confirmPasswordField.getPassword()).trim();
 
             if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, "Both password fields are required.", "Validation Error", JOptionPane.WARNING_MESSAGE);
                 continue;
             }
 
             if (!newPassword.equals(confirmPassword)) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, "Passwords do not match.", "Validation Error", JOptionPane.WARNING_MESSAGE);
                 continue;
             }
 
             if (newPassword.length() < 6) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, "Password must be at least 6 characters long.", "Validation Error", JOptionPane.WARNING_MESSAGE);
                 continue;
             }
@@ -230,16 +255,30 @@ public class LoginPanel extends JPanel {
                 boolean changed = jdbc.changePassword(icNumber, newPassword);
 
                 if (changed) {
+                    DialogUtil.styleMessageDialog();
                     JOptionPane.showMessageDialog(this, "Password changed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
                     return true;
                 } else {
+                    DialogUtil.styleMessageDialog();
                     JOptionPane.showMessageDialog(this, "Failed to change password.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, "Error changing password: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void styleDialogPasswordField(JPasswordField field) {
+        field.setBackground(new Color(36, 36, 36));
+        field.setForeground(DarkTheme.TEXT);
+        field.setCaretColor(DarkTheme.TEXT);
+        field.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(8, 12, 8, 12)
+        ));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
     }
 
     private void openDashboard(LoginResponseDto response) {
@@ -256,11 +295,13 @@ public class LoginPanel extends JPanel {
                 EmployeeDashboardFrame employeeDashboardFrame = new EmployeeDashboardFrame(jdbc, response);
                 employeeDashboardFrame.setVisible(true);
             } else {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(this, "Unknown user role.", "Error", JOptionPane.ERROR_MESSAGE);
                 new LoginFrame(jdbc).setVisible(true);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(this, "Failed to open dashboard: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             new LoginFrame(jdbc).setVisible(true);
         }

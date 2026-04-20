@@ -1,16 +1,25 @@
 package com.techspire.project.client.view;
 
 import com.techspire.project.client.controller.ClientController;
+import com.techspire.project.client.view.ui.BasePanel;
+import com.techspire.project.client.view.ui.DarkTheme;
+import com.techspire.project.client.view.ui.DialogUtil;
+import com.techspire.project.client.view.ui.ModernButton;
 import com.techspire.project.model.LeaveRecord;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.List;
 
-public class LeaveStatusPanel extends JPanel {
+public class LeaveStatusPanel extends BasePanel {
 
     private final ClientController controller;
     private final DefaultTableModel tableModel;
@@ -35,18 +44,84 @@ public class LeaveStatusPanel extends JPanel {
 
     private void initUi() {
         setLayout(new BorderLayout());
+        setBackground(DarkTheme.BG);
 
-        table.setRowHeight(38);
+        JPanel card = new JPanel(new BorderLayout(0, 16));
+        card.setBackground(DarkTheme.PANEL);
+        card.setBorder(new CompoundBorder(
+                new LineBorder(DarkTheme.BORDER, 1, true),
+                new EmptyBorder(20, 20, 20, 20)
+        ));
+
+        JLabel titleLabel = new JLabel("Leave Status");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titleLabel.setForeground(DarkTheme.TEXT);
+
+        styleTable();
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(DarkTheme.PANEL);
+        scrollPane.setBackground(DarkTheme.PANEL);
+
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(scrollPane, BorderLayout.CENTER);
+
+        add(card, BorderLayout.CENTER);
+    }
+
+    private void styleTable() {
+        table.setRowHeight(42);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setBackground(DarkTheme.PANEL);
+        table.setForeground(DarkTheme.TEXT);
+        table.setSelectionBackground(DarkTheme.ACCENT);
+        table.setSelectionForeground(Color.WHITE);
+        table.setGridColor(DarkTheme.BORDER);
+        table.setShowGrid(true);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFillsViewportHeight(true);
+        table.setBorder(BorderFactory.createEmptyBorder());
+
+        JTableHeader header = table.getTableHeader();
+        header.setPreferredSize(new Dimension(header.getWidth(), 40));
+        header.setReorderingAllowed(false);
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table,
+                    Object value,
+                    boolean isSelected,
+                    boolean hasFocus,
+                    int row,
+                    int column
+            ) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column
+                );
+
+                label.setBackground(new Color(32, 33, 36));
+                label.setForeground(new Color(232, 234, 237));
+                label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                label.setBorder(BorderFactory.createLineBorder(DarkTheme.BORDER));
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setOpaque(true);
+
+                return label;
+            }
+        });
+
+        for (int i = 0; i < table.getColumnCount() - 1; i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(new StatusAwareRenderer());
+        }
+
         table.getColumn("Action").setMinWidth(180);
         table.getColumn("Action").setPreferredWidth(210);
         table.getColumn("Action").setMaxWidth(230);
-
         table.getColumn("Action").setCellRenderer(new LeaveActionCellRenderer());
         table.getColumn("Action").setCellEditor(
                 new LeaveActionCellEditor(new JCheckBox(), table, controller, this)
         );
-
-        add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
     public void loadLeaveRecords() {
@@ -72,6 +147,7 @@ public class LeaveStatusPanel extends JPanel {
             showActionColumn();
 
         } catch (Exception ex) {
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -99,6 +175,7 @@ public class LeaveStatusPanel extends JPanel {
             hideActionColumn();
 
         } catch (Exception ex) {
+            DialogUtil.styleMessageDialog();
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -116,17 +193,78 @@ public class LeaveStatusPanel extends JPanel {
         table.getColumn("Action").setWidth(0);
     }
 
+    private static class StatusAwareRenderer extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable table,
+                Object value,
+                boolean isSelected,
+                boolean hasFocus,
+                int row,
+                int column
+        ) {
+            JLabel label = (JLabel) super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, column
+            );
+
+            label.setHorizontalAlignment(SwingConstants.CENTER);
+            label.setBorder(new EmptyBorder(0, 8, 0, 8));
+
+            if (isSelected) {
+                label.setBackground(DarkTheme.ACCENT);
+                label.setForeground(Color.WHITE);
+                return label;
+            }
+
+            label.setBackground(DarkTheme.PANEL);
+            label.setForeground(DarkTheme.TEXT);
+
+            Object statusObj = table.getValueAt(row, 3);
+            String status = statusObj == null ? "" : statusObj.toString().toUpperCase();
+
+            if (column == 3) {
+                switch (status) {
+                    case "APPROVED" -> {
+                        label.setForeground(DarkTheme.SUCCESS);
+                        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                    }
+                    case "REJECTED" -> {
+                        label.setForeground(DarkTheme.ERROR);
+                        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                    }
+                    case "PENDING" -> {
+                        label.setForeground(DarkTheme.WARNING);
+                        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                    }
+                    default -> {
+                        label.setForeground(DarkTheme.TEXT);
+                        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                    }
+                }
+            } else {
+                label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            }
+
+            return label;
+        }
+    }
+
     private static class LeaveActionCellRenderer extends JPanel implements TableCellRenderer {
 
-        private final JButton approveButton = new JButton("Approve");
-        private final JButton rejectButton = new JButton("Reject");
+        private final ModernButton approveButton = new ModernButton("Approve");
+        private final ModernButton rejectButton = new ModernButton("Reject");
 
         public LeaveActionCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 6, 2));
+            setLayout(new FlowLayout(FlowLayout.CENTER, 8, 4));
             setOpaque(true);
+            setBackground(DarkTheme.PANEL);
 
-            styleApproveButton(approveButton);
-            styleRejectButton(rejectButton);
+            approveButton.setSuccessStyle();
+            rejectButton.setDangerStyle();
+
+            approveButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            rejectButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
             add(approveButton);
             add(rejectButton);
@@ -147,15 +285,16 @@ public class LeaveStatusPanel extends JPanel {
             approveButton.setEnabled(pending);
             rejectButton.setEnabled(pending);
 
+            setBackground(isSelected ? DarkTheme.ACCENT : DarkTheme.PANEL);
             return this;
         }
     }
 
     private static class LeaveActionCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 2));
-        private final JButton approveButton = new JButton("Approve");
-        private final JButton rejectButton = new JButton("Reject");
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
+        private final ModernButton approveButton = new ModernButton("Approve");
+        private final ModernButton rejectButton = new ModernButton("Reject");
 
         private final JTable table;
         private final ClientController controller;
@@ -173,8 +312,13 @@ public class LeaveStatusPanel extends JPanel {
             this.controller = controller;
             this.parentPanel = parentPanel;
 
-            styleApproveButton(approveButton);
-            styleRejectButton(rejectButton);
+            panel.setBackground(DarkTheme.PANEL);
+
+            approveButton.setSuccessStyle();
+            rejectButton.setDangerStyle();
+
+            approveButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            rejectButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
             panel.add(approveButton);
             panel.add(rejectButton);
@@ -199,6 +343,7 @@ public class LeaveStatusPanel extends JPanel {
             approveButton.setEnabled(pending);
             rejectButton.setEnabled(pending);
 
+            panel.setBackground(DarkTheme.PANEL);
             return panel;
         }
 
@@ -209,15 +354,28 @@ public class LeaveStatusPanel extends JPanel {
 
         private void approve() {
             try {
+                boolean confirmed = DialogUtil.showConfirmDialog(
+                        parentPanel,
+                        "Confirm Approval",
+                        "Are you sure you want to approve this leave?"
+                );
+
+                if (!confirmed) {
+                    fireEditingStopped();
+                    return;
+                }
+
                 Long leaveId = Long.parseLong(table.getValueAt(row, 0).toString());
                 boolean result = controller.approveLeave(leaveId);
 
                 if (result) {
+                    DialogUtil.styleMessageDialog();
                     JOptionPane.showMessageDialog(parentPanel, "Leave Approved");
                     parentPanel.loadLeaveRecords();
                 }
 
             } catch (Exception ex) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(parentPanel, ex.getMessage());
             }
 
@@ -226,33 +384,32 @@ public class LeaveStatusPanel extends JPanel {
 
         private void reject() {
             try {
+                boolean confirmed = DialogUtil.showConfirmDialog(
+                        parentPanel,
+                        "Confirm Rejection",
+                        "Are you sure you want to reject this leave?"
+                );
+
+                if (!confirmed) {
+                    fireEditingStopped();
+                    return;
+                }
+
                 Long leaveId = Long.parseLong(table.getValueAt(row, 0).toString());
                 boolean result = controller.rejectLeave(leaveId);
 
                 if (result) {
+                    DialogUtil.styleMessageDialog();
                     JOptionPane.showMessageDialog(parentPanel, "Leave Rejected");
                     parentPanel.loadLeaveRecords();
                 }
 
             } catch (Exception ex) {
+                DialogUtil.styleMessageDialog();
                 JOptionPane.showMessageDialog(parentPanel, ex.getMessage());
             }
 
             fireEditingStopped();
         }
-    }
-
-    private static void styleApproveButton(JButton button) {
-        button.setBackground(new Color(13, 110, 253));
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-    }
-
-    private static void styleRejectButton(JButton button) {
-        button.setBackground(new Color(220, 53, 69));
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
     }
 }
